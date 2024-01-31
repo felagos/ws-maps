@@ -16,7 +16,6 @@ interface Marker {
 	title: string;
 	lat: number;
 	lng: number;
-	zoom?: number;
 }
 
 export const useMap = ({ lat, lng }: Params) => {
@@ -42,7 +41,7 @@ export const useMap = ({ lat, lng }: Params) => {
 
 				refDragListener.current = map.addListener('dragend', () => {
 					const { lat, lng } = map.getCenter()!;
-					
+
 					addMarker({
 						lat: lat(),
 						lng: lng(),
