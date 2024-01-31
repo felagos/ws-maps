@@ -1,0 +1,17 @@
+{
+  "name": "ws-maps",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install:all": "pnpm i && concurrently \"pnpm i --prefix ./client\" \"pnpm i --prefix ./server\"",
+    "start:client": "pnpm --prefix ./client dev",
+    "start:server": "pnpm --prefix ./server dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

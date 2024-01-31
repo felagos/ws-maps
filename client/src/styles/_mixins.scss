@@ -1,0 +1,17 @@
+@for $i from 1 to 100 {
+	.u-mb-#{$i} {
+		margin-bottom: #{$i}px;
+	}
+	.u-mr-#{$i} {
+		margin-bottom: #{$i}px;
+	}
+	.u-mt-#{$i} {
+		margin-top: #{$i}px;
+	}
+	.u-ml-#{$i} {
+		margin-left: #{$i}px;
+	}
+	.u-font-#{$i} {
+		font-size: #{$i}px;
+	}
+}
