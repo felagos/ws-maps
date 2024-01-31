@@ -1,3 +1,3 @@
-export * from './index';
-export * from './useSocket';
+export * from './useMap';
 export * from './useScreenSize';
+export * from './useSocket';
