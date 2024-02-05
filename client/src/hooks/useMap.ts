@@ -18,10 +18,17 @@ interface Marker {
 	lng: number;
 }
 
+interface ClickEvent {
+	latLng: {
+		lat: () => number;
+		lng: () => number;
+	}
+}
+
 export const useMap = () => {
 
 	const refMap = useRef<google.maps.Map>();
-	const refDragListener = useRef<google.maps.MapsEventListener>();
+	const refClickListener = useRef<google.maps.MapsEventListener>();
 
 	const getCurrentPosition = useCallback(() => {
 		return new Promise<Position>((resolve, reject) => {
@@ -35,8 +42,8 @@ export const useMap = () => {
 
 					resolve(pos);
 				},
-				() => {
-					reject(new Error('Error: The Geolocation service failed.'));
+				(error) => {
+					reject(error);
 				}
 			);
 
@@ -61,8 +68,8 @@ export const useMap = () => {
 
 				addMarker({ lat, lng, title: 'You are here' });
 
-				refDragListener.current = map.addListener('dragend', () => {
-					const { lat, lng } = map.getCenter()!;
+				refClickListener.current = map.addListener('click', (event: ClickEvent) => {
+					const { lat, lng } = event.latLng;
 
 					addMarker({
 						lat: lat(),
@@ -75,9 +82,9 @@ export const useMap = () => {
 
 
 		return () => {
-			refDragListener.current?.remove();
+			refClickListener.current?.remove();
 
-			refDragListener.current = undefined;
+			refClickListener.current = undefined;
 			refMap.current = undefined;
 		}
 
