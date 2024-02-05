@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
+import { v4 as uuidv4 } from 'uuid';
 import env from "../env";
 
 
@@ -25,8 +26,11 @@ interface ClickEvent {
 	}
 }
 
+type Markers = Record<string, google.maps.Marker>;
+
 export const useMap = () => {
 
+	const refMarkers = useRef<Markers>({});
 	const refMap = useRef<google.maps.Map>();
 	const refClickListener = useRef<google.maps.MapsEventListener>();
 
@@ -68,14 +72,18 @@ export const useMap = () => {
 
 				addMarker({ lat, lng, title: 'You are here' });
 
-				refClickListener.current = map.addListener('click', (event: ClickEvent) => {
+				refClickListener.current = map.addListener('click', async (event: ClickEvent) => {
 					const { lat, lng } = event.latLng;
 
-					addMarker({
+					const markerId = uuidv4();
+					const marker = await addMarker({
 						lat: lat(),
 						lng: lng(),
 						title: 'You are here now'
 					});
+
+					refMarkers.current[markerId] = marker;
+
 				});
 			});
 		}
@@ -91,13 +99,12 @@ export const useMap = () => {
 	}, [getCurrentPosition]);
 
 	const addMarker = async ({ lat, lng, title }: Marker) => {
-		const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
-		return new AdvancedMarkerElement({
+		return new Marker({
 			map: refMap.current,
 			position: { lat, lng },
 			title,
-			gmpClickable: true,
 		});
 
 	}
