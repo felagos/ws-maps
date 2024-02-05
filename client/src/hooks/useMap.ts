@@ -70,13 +70,13 @@ export const useMap = () => {
 
 				refMap.current = map;
 
-				addMarker({ lat, lng, title: 'You are here' });
+				createMarker({ lat, lng, title: 'You are here' });
 
 				refClickListener.current = map.addListener('click', async (event: ClickEvent) => {
 					const { lat, lng } = event.latLng;
 
 					const markerId = uuidv4();
-					const marker = await addMarker({
+					const marker = await createMarker({
 						lat: lat(),
 						lng: lng(),
 						title: 'You are here now'
@@ -98,7 +98,7 @@ export const useMap = () => {
 
 	}, [getCurrentPosition]);
 
-	const addMarker = async ({ lat, lng, title }: Marker) => {
+	const createMarker = async ({ lat, lng, title }: Marker) => {
 		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
 		return new Marker({
@@ -109,5 +109,5 @@ export const useMap = () => {
 
 	}
 
-	return { addMarker };
+	return { addMarker: createMarker, markers: refMarkers.current };
 };
