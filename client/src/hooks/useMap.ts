@@ -71,7 +71,7 @@ export const useMap = () => {
 
 	}, []);
 
-	const addMarker = useCallback( async ({ lat, lng, title }: CreateMarker) => {
+	const addMarker = useCallback(async ({ lat, lng, title }: CreateMarker) => {
 		const marker = await createMarker({ lat, lng, title });
 
 		marker.addListener('dragend', (event: MapEvent) => {
