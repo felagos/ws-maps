@@ -13,13 +13,13 @@ interface Position {
 	lng: number;
 }
 
-interface Marker {
+interface CreateMarker {
 	title: string;
 	lat: number;
 	lng: number;
 }
 
-interface ClickEvent {
+interface MapEvent {
 	latLng: {
 		lat: () => number;
 		lng: () => number;
@@ -54,6 +54,38 @@ export const useMap = () => {
 		})
 	}, []);
 
+	const createMarker = useCallback(async ({ lat, lng, title }: CreateMarker) => {
+		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+
+		const markerId = uuidv4();
+		const marker = new Marker({
+			map: refMap.current,
+			position: { lat, lng },
+			title,
+			draggable: true
+		});
+
+		marker.setValues({ id: markerId });
+
+		return marker;
+
+	}, []);
+
+	const addMarker = useCallback( async ({ lat, lng, title }: CreateMarker) => {
+		const marker = await createMarker({ lat, lng, title });
+
+		marker.addListener('dragend', (event: MapEvent) => {
+			const { lat, lng } = event.latLng;
+
+			const oldMarker = refMarkers.current[marker.get('id')];
+			oldMarker.setPosition({ lat: lat(), lng: lng() });
+
+			refMarkers.current[marker.get('id')] = oldMarker;
+		});
+
+		refMarkers.current[marker.get('id')] = marker;
+	}, [createMarker]);
+
 	useEffect(() => {
 		if (!refMap.current) {
 			loader.importLibrary('maps').then(async () => {
@@ -70,20 +102,12 @@ export const useMap = () => {
 
 				refMap.current = map;
 
-				createMarker({ lat, lng, title: 'You are here' });
+				addMarker({ lat, lng, title: 'You are here' })
 
-				refClickListener.current = map.addListener('click', async (event: ClickEvent) => {
+				refClickListener.current = map.addListener('click', async (event: MapEvent) => {
 					const { lat, lng } = event.latLng;
 
-					const markerId = uuidv4();
-					const marker = await createMarker({
-						lat: lat(),
-						lng: lng(),
-						title: 'You are here now'
-					});
-
-					refMarkers.current[markerId] = marker;
-
+					addMarker({ lat: lat(), lng: lng(), title: 'You are here now' });
 				});
 			});
 		}
@@ -92,22 +116,17 @@ export const useMap = () => {
 		return () => {
 			refClickListener.current?.remove();
 
+			Object.values(refMarkers.current).forEach(marker => {
+				marker.setDraggable(null);
+			});
+
 			refClickListener.current = undefined;
 			refMap.current = undefined;
+			refMarkers.current = {};
 		}
 
-	}, [getCurrentPosition]);
+	}, [addMarker, getCurrentPosition]);
 
-	const createMarker = async ({ lat, lng, title }: Marker) => {
-		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
-
-		return new Marker({
-			map: refMap.current,
-			position: { lat, lng },
-			title,
-		});
-
-	}
 
 	return { addMarker: createMarker, markers: refMarkers.current };
 };
