@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 import env from "../env";
 
@@ -7,7 +7,7 @@ const loader = new Loader({
 	apiKey: env.MAP_API_KEY,
 });
 
-interface Params {
+interface Position {
 	lat: number;
 	lng: number;
 }
@@ -18,14 +18,36 @@ interface Marker {
 	lng: number;
 }
 
-export const useMap = ({ lat, lng }: Params) => {
+export const useMap = () => {
 
 	const refMap = useRef<google.maps.Map>();
 	const refDragListener = useRef<google.maps.MapsEventListener>();
 
+	const getCurrentPosition = useCallback(() => {
+		return new Promise<Position>((resolve, reject) => {
+
+			navigator.geolocation.getCurrentPosition(
+				(position: GeolocationPosition) => {
+					const pos: Position = {
+						lat: position.coords.latitude,
+						lng: position.coords.longitude,
+					};
+
+					resolve(pos);
+				},
+				() => {
+					reject(new Error('Error: The Geolocation service failed.'));
+				}
+			);
+
+		})
+	}, []);
+
 	useEffect(() => {
 		if (!refMap.current) {
 			loader.importLibrary('maps').then(async () => {
+
+				const { lat, lng } = await getCurrentPosition();
 
 				const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
 
@@ -59,7 +81,7 @@ export const useMap = ({ lat, lng }: Params) => {
 			refMap.current = undefined;
 		}
 
-	}, [lat, lng]);
+	}, [getCurrentPosition]);
 
 	const addMarker = async ({ lat, lng, title }: Marker) => {
 		const { AdvancedMarkerElement } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
