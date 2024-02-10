@@ -91,7 +91,7 @@ export const useMap = () => {
 
 		refMarkers.current[marker.get('id')] = marker;
 
-		newMarker$.current.next(marker);
+		newMarker$.current.next(marker.get('id'));
 
 	}, [createMarker]);
 
