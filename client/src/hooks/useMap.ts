@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Loader } from "@googlemaps/js-api-loader";
 import { v4 as uuidv4 } from 'uuid';
+import { Subject } from 'rxjs';
 import env from "../env";
 
 
@@ -33,6 +34,9 @@ export const useMap = () => {
 	const refMarkers = useRef<Markers>({});
 	const refMap = useRef<google.maps.Map>();
 	const refClickListener = useRef<google.maps.MapsEventListener>();
+
+	const markerDragged$ = useRef(new Subject<google.maps.Marker>());
+	const newMarker$ = useRef(new Subject<google.maps.Marker>());
 
 	const getCurrentPosition = useCallback(() => {
 		return new Promise<Position>((resolve, reject) => {
@@ -81,9 +85,14 @@ export const useMap = () => {
 			oldMarker.setPosition({ lat: lat(), lng: lng() });
 
 			refMarkers.current[marker.get('id')] = oldMarker;
+
+			markerDragged$.current.next(oldMarker);
 		});
 
 		refMarkers.current[marker.get('id')] = marker;
+
+		newMarker$.current.next(marker);
+
 	}, [createMarker]);
 
 	useEffect(() => {
@@ -128,5 +137,10 @@ export const useMap = () => {
 	}, [addMarker, getCurrentPosition]);
 
 
-	return { addMarker: createMarker, markers: refMarkers.current };
+	return { 
+		addMarker, 
+		markers: refMarkers.current,
+		newMarker$: newMarker$.current,
+		markerDragged$: markerDragged$.current
+ };
 };
