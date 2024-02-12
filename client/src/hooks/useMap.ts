@@ -15,6 +15,7 @@ interface Position {
 }
 
 interface CreateMarker {
+	id?: string;
 	title: string;
 	lat: number;
 	lng: number;
@@ -27,7 +28,7 @@ interface MapEvent {
 	}
 }
 
-class Marker {
+export class Marker {
 
 	constructor(
 		public id: string,
@@ -42,8 +43,7 @@ class Marker {
 
 }
 
-
-type Markers = Record<string, Marker>;
+export type Markers = Record<string, Marker>;
 
 export const useMap = () => {
 
@@ -74,10 +74,10 @@ export const useMap = () => {
 		})
 	}, []);
 
-	const createMarker = useCallback(async ({ lat, lng, title }: CreateMarker) => {
+	const createMarker = useCallback(async ({ lat, lng, title, id }: CreateMarker) => {
 		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
-		const markerId = uuidv4();
+		const markerId = id ?? uuidv4();
 		const marker = new Marker({
 			map: refMap.current,
 			position: { lat, lng },
