@@ -19,3 +19,9 @@ export class Marker {
 	}
 
 }
+
+export interface NewMarker {
+	id: string;
+	lat: number;
+	lng: number;
+}

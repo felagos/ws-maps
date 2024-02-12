@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { SocketEvents } from "./enum";
-import { Marker, Markers } from "./models";
+import { Marker, Markers, NewMarker } from "./models";
 
 export class Sockets {
 
@@ -18,9 +18,11 @@ export class Sockets {
 
 			socket.emit(SocketEvents.ACTIVED_MARKERS, this.markers.getMarkers());
 
-			socket.on(SocketEvents.NEW_MARKER, (marker: Marker) => {
-				console.log(marker);
-				//this.markers.addMarker(marker);
+			socket.on(SocketEvents.NEW_MARKER, (marker: NewMarker) => {
+				const newMarker = new Marker(marker.id, marker.lat, marker.lng);
+				this.markers.addMarker(newMarker);
+
+				socket.emit(SocketEvents.NEW_MARKER, newMarker);
 			});
 
 		});
