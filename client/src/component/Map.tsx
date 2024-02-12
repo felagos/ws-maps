@@ -1,18 +1,30 @@
 import { useEffect } from "react";
-import { useMap } from "../hooks";
+import { useMap, useSocket } from "../hooks";
+import { SocketEvents } from "../enum";
 
 export const Map = () => {
 
-	const { newMarker$, markerDragged$ } = useMap();
+	const { newMarker$, markerDragged$, markers } = useMap();
+	const { socket } = useSocket();
 
 	useEffect(() => {
 		newMarker$.subscribe((marker) => {
+			socket.emit(SocketEvents.NEW_MARKER, marker);
 		})
-	}, [newMarker$]);
+
+		return () => {
+			newMarker$.unsubscribe();
+		}
+	}, [markers, newMarker$, socket]);
 
 	useEffect(() => {
 		markerDragged$.subscribe((marker) => {
 		})
+
+		return () => {
+			markerDragged$.unsubscribe();
+		}
+
 	}, [markerDragged$]);
 
 	return (

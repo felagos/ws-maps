@@ -27,7 +27,23 @@ interface MapEvent {
 	}
 }
 
-type Markers = Record<string, google.maps.Marker>;
+class Marker {
+
+	constructor(
+		public id: string,
+		public lat: number,
+		public lng: number
+	) { }
+
+	setPosition({ lat, lng }: Position) {
+		this.lat = lat;
+		this.lng = lng;
+	}
+
+}
+
+
+type Markers = Record<string, Marker>;
 
 export const useMap = () => {
 
@@ -35,8 +51,8 @@ export const useMap = () => {
 	const refMap = useRef<google.maps.Map>();
 	const refClickListener = useRef<google.maps.MapsEventListener>();
 
-	const markerDragged$ = useRef(new Subject<google.maps.Marker>());
-	const newMarker$ = useRef(new Subject<google.maps.Marker>());
+	const markerDragged$ = useRef(new Subject<Marker>());
+	const newMarker$ = useRef(new Subject<Marker>());
 
 	const getCurrentPosition = useCallback(() => {
 		return new Promise<Position>((resolve, reject) => {
@@ -89,9 +105,15 @@ export const useMap = () => {
 			markerDragged$.current.next(oldMarker);
 		});
 
-		refMarkers.current[marker.get('id')] = marker;
+		const newMarker = new Marker(
+			marker.get('id'), 
+			marker.getPosition()!.lat(), 
+			marker.getPosition()!.lng()
+		);
 
-		newMarker$.current.next(marker.get('id'));
+		refMarkers.current[marker.get('id')] = newMarker;
+
+		newMarker$.current.next(newMarker);
 
 	}, [createMarker]);
 
@@ -111,8 +133,6 @@ export const useMap = () => {
 
 				refMap.current = map;
 
-				addMarker({ lat, lng, title: 'You are here' })
-
 				refClickListener.current = map.addListener('click', async (event: MapEvent) => {
 					const { lat, lng } = event.latLng;
 
@@ -125,10 +145,6 @@ export const useMap = () => {
 		return () => {
 			refClickListener.current?.remove();
 
-			Object.values(refMarkers.current).forEach(marker => {
-				marker.setDraggable(null);
-			});
-
 			refClickListener.current = undefined;
 			refMap.current = undefined;
 			refMarkers.current = {};
@@ -137,10 +153,10 @@ export const useMap = () => {
 	}, [addMarker, getCurrentPosition]);
 
 
-	return { 
-		addMarker, 
+	return {
+		addMarker,
 		markers: refMarkers.current,
 		newMarker$: newMarker$.current,
 		markerDragged$: markerDragged$.current
- };
+	};
 };

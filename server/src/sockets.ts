@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { SocketEvents } from "./enum";
-import { Markers } from "./models";
+import { Marker, Markers } from "./models";
 
 export class Sockets {
 
@@ -15,7 +15,14 @@ export class Sockets {
 
 	socketEvents() {
 		this.io.on(SocketEvents.CONNECTION, (socket) => {
-			console.log('Client connected');			
+
+			socket.emit(SocketEvents.ACTIVED_MARKERS, this.markers.getMarkers());
+
+			socket.on(SocketEvents.NEW_MARKER, (marker: Marker) => {
+				console.log(marker);
+				//this.markers.addMarker(marker);
+			});
+
 		});
 	}
 }
