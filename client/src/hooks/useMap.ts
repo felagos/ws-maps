@@ -75,10 +75,10 @@ export const useMap = () => {
 	}, []);
 
 	const createMarker = useCallback(async ({ lat, lng, title, id }: CreateMarker) => {
-		const { Marker } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
+		const { Marker: MarkerGM } = await google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
 
 		const markerId = id ?? uuidv4();
-		const marker = new Marker({
+		const marker = new MarkerGM({
 			map: refMap.current,
 			position: { lat, lng },
 			title,
@@ -91,31 +91,35 @@ export const useMap = () => {
 
 	}, []);
 
-	const addMarker = useCallback(async ({ lat, lng, title }: CreateMarker) => {
-		const marker = await createMarker({ lat, lng, title });
+	const updateMarker = useCallback(async (id: string, lat: number, lng: number) => {
+		const oldMarker = refMarkers.current[id];
+			oldMarker.setPosition({ lat, lng });
+
+			refMarkers.current[id] = oldMarker;
+
+			markerDragged$.current.next(oldMarker);
+	}, []);
+
+	const addMarker = useCallback(async ({ id, lat, lng, title }: CreateMarker) => {
+		const marker = await createMarker({ id, lat, lng, title });
 
 		marker.addListener('dragend', (event: MapEvent) => {
 			const { lat, lng } = event.latLng;
 
-			const oldMarker = refMarkers.current[marker.get('id')];
-			oldMarker.setPosition({ lat: lat(), lng: lng() });
-
-			refMarkers.current[marker.get('id')] = oldMarker;
-
-			markerDragged$.current.next(oldMarker);
+			updateMarker(marker.get('id'), lat(), lng());
 		});
 
 		const newMarker = new Marker(
-			marker.get('id'), 
-			marker.getPosition()!.lat(), 
+			marker.get('id'),
+			marker.getPosition()!.lat(),
 			marker.getPosition()!.lng()
 		);
 
 		refMarkers.current[marker.get('id')] = newMarker;
 
-		newMarker$.current.next(newMarker);
+		if (!id) newMarker$.current.next(newMarker);
 
-	}, [createMarker]);
+	}, [createMarker, updateMarker]);
 
 	useEffect(() => {
 		if (!refMap.current) {
@@ -155,6 +159,7 @@ export const useMap = () => {
 
 	return {
 		addMarker,
+		updateMarker,
 		markers: refMarkers.current,
 		newMarker$: newMarker$.current,
 		markerDragged$: markerDragged$.current

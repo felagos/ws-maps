@@ -22,7 +22,14 @@ export class Sockets {
 				const newMarker = new Marker(marker.id, marker.lat, marker.lng);
 				this.markers.addMarker(newMarker);
 
-				socket.emit(SocketEvents.NEW_MARKER, newMarker);
+				socket.broadcast.emit(SocketEvents.NEW_MARKER, newMarker);
+			});
+
+			socket.on(SocketEvents.UPDATE_MARKER, (marker: NewMarker) => {
+				const newMarker = new Marker(marker.id, marker.lat, marker.lng);
+				this.markers.updateMarker(newMarker);
+
+				socket.broadcast.emit(SocketEvents.UPDATE_MARKER, newMarker);
 			});
 
 		});

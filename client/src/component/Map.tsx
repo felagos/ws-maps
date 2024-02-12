@@ -24,19 +24,29 @@ export const Map = () => {
 
 	useEffect(() => {
 		markerDragged$.subscribe((marker) => {
+			socket.emit(SocketEvents.UPDATE_MARKER, {
+				id: marker.id,
+				lat: marker.lat,
+				lng: marker.lng
+			});
 		})
 
 		return () => {
 			markerDragged$.unsubscribe();
 		}
 
-	}, [markerDragged$]);
+	}, [markerDragged$, socket]);
 
 	useEffect(() => {
 		socket.on(SocketEvents.NEW_MARKER, (marker: Marker) => {
-			console.log(marker);
+			addMarker({
+				id: marker.id,
+				lat: marker.lat,
+				lng: marker.lng,
+				title: 'You are here now'
+			})
 		});
-	}, [socket]);
+	}, [addMarker, socket]);
 
 	useEffect(() => {
 		socket.on(SocketEvents.ACTIVED_MARKERS, (markers: Markers) => {
